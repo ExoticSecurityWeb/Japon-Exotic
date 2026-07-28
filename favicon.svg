@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#2a2138"/>
+      <stop offset="100%" stop-color="#161221"/>
+    </radialGradient>
+    <radialGradient id="petal" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#fbd8e1"/>
+      <stop offset="100%" stop-color="#f7b8c8"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="32" cy="32" r="32" fill="url(#bg)"/>
+
+  <g transform="translate(32,32)">
+    <!-- 5 sakura petals -->
+    <g fill="url(#petal)">
+      <path d="M0,-18 C6,-14 6,-4 0,-2 C-6,-4 -6,-14 0,-18 Z" transform="rotate(0)"/>
+      <path d="M0,-18 C6,-14 6,-4 0,-2 C-6,-4 -6,-14 0,-18 Z" transform="rotate(72)"/>
+      <path d="M0,-18 C6,-14 6,-4 0,-2 C-6,-4 -6,-14 0,-18 Z" transform="rotate(144)"/>
+      <path d="M0,-18 C6,-14 6,-4 0,-2 C-6,-4 -6,-14 0,-18 Z" transform="rotate(216)"/>
+      <path d="M0,-18 C6,-14 6,-4 0,-2 C-6,-4 -6,-14 0,-18 Z" transform="rotate(288)"/>
+    </g>
+    <circle r="4" fill="#d9b872"/>
+  </g>
+</svg>
