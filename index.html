@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exotic Security — Japon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#161221;
+    --night-deep:#0c0a13;
+    --sakura:#f7b8c8;
+    --sakura-soft:#fbd8e1;
+    --gold:#d9b872;
+    --paper:#f3ece6;
+    --paper-dim:#c9c0d6;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    background:
+      linear-gradient(180deg, rgba(12,10,19,0.35) 0%, rgba(12,10,19,0.55) 45%, rgba(12,10,19,0.92) 100%),
+      url('sakura.jpg') center top / cover no-repeat fixed;
+    min-height:100vh;
+    overflow-x:hidden;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color:var(--paper);
+    position:relative;
+  }
+
+  /* Falling sakura petals */
+  .petals{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:1;
+    overflow:hidden;
+  }
+  .petal{
+    position:absolute;
+    top:-5%;
+    width:14px;
+    height:14px;
+    background:radial-gradient(circle at 30% 30%, var(--sakura-soft), var(--sakura) 70%);
+    border-radius:70% 30% 65% 35% / 60% 40% 60% 40%;
+    opacity:0.85;
+    animation:fall linear infinite, sway ease-in-out infinite;
+  }
+  @keyframes fall{
+    to{ transform:translateY(115vh); }
+  }
+  @keyframes sway{
+    0%,100%{ margin-left:0; }
+    50%{ margin-left:60px; }
+  }
+
+  /* branch silhouette */
+  .branch{
+    position:fixed;
+    bottom:-40px;
+    right:-40px;
+    width:min(70vw, 520px);
+    opacity:0.5;
+    z-index:1;
+    pointer-events:none;
+  }
+  .branch svg{ width:100%; height:auto; display:block; }
+
+  main{
+    position:relative;
+    z-index:2;
+    max-width:720px;
+    margin:0 auto;
+    padding:10vh 24px 8vh;
+    text-align:center;
+  }
+
+  .eyebrow{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:300;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    font-size:0.72rem;
+    color:var(--gold);
+    margin:0 0 28px;
+  }
+
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:clamp(3.2rem, 12vw, 6rem);
+    line-height:1;
+    margin:0 0 6px;
+    color:var(--paper);
+    text-shadow:0 0 40px rgba(247,184,200,0.35);
+  }
+
+  .romaji{
+    font-family:'Shippori Mincho', serif;
+    font-style:italic;
+    font-size:1.05rem;
+    letter-spacing:0.08em;
+    color:var(--paper-dim);
+    margin:0 0 50px;
+  }
+
+  .statement{
+    font-size:1.15rem;
+    line-height:1.7;
+    color:var(--paper);
+    margin:0 0 8px;
+  }
+  .domain{
+    font-family:'Shippori Mincho', serif;
+    color:var(--sakura);
+    font-size:1.3rem;
+    letter-spacing:0.02em;
+  }
+
+  .divider{
+    width:1px;
+    height:56px;
+    background:linear-gradient(var(--gold), transparent);
+    margin:44px auto;
+    opacity:0.6;
+  }
+
+  .notice{
+    border:1px solid rgba(217,184,114,0.35);
+    background:rgba(217,184,114,0.06);
+    border-radius:4px;
+    padding:20px 24px;
+    font-size:0.92rem;
+    line-height:1.6;
+    color:var(--paper-dim);
+    text-align:left;
+    margin-bottom:40px;
+  }
+  .notice strong{ color:var(--gold); font-weight:500; }
+
+  .coming-soon{
+    font-family:'Shippori Mincho', serif;
+    font-size:1.05rem;
+    color:var(--sakura-soft);
+    letter-spacing:0.03em;
+    margin-bottom:8px;
+  }
+  .coming-soon .kanji{
+    display:block;
+    font-size:0.85rem;
+    color:var(--paper-dim);
+    letter-spacing:0.3em;
+    margin-top:6px;
+  }
+
+  footer{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    padding:0 24px 6vh;
+    font-size:0.75rem;
+    letter-spacing:0.1em;
+    color:var(--paper-dim);
+    opacity:0.7;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .petal{ animation:none; display:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="petals" id="petals"></div>
+
+  <main>
+    <p class="eyebrow">Exotic Security</p>
+    <h1>こんにちは</h1>
+    <p class="romaji">Konnichiwa</p>
+
+    <p class="statement">
+      Ceci est officiellement un domaine <strong>Exotic</strong> du Japon —<br>
+      <span class="domain">takashi-exotic.ddo.jp</span>
+    </p>
+
+    <div class="divider"></div>
+
+    <div class="notice">
+      <strong>À ne pas oublier :</strong> ce domaine est hébergé gratuitement sur Dynamic DO!.jp.
+      Pensez à le réclamer / renouveler régulièrement sur <strong>ddo.jp</strong> pour qu'il reste actif.
+    </div>
+
+    <p class="coming-soon">
+      Un service Exotic arrive bientôt sur ce domaine.
+      <span class="kanji">近日公開</span>
+    </p>
+  </main>
+
+  <footer>
+    © ExoticSecurity Japon
+  </footer>
+
+  <script>
+    const container = document.getElementById('petals');
+    const total = 22;
+    for(let i=0;i<total;i++){
+      const p = document.createElement('div');
+      p.className = 'petal';
+      const size = 8 + Math.random()*10;
+      p.style.width = size+'px';
+      p.style.height = size+'px';
+      p.style.left = Math.random()*100+'vw';
+      p.style.animationDuration = (8 + Math.random()*10)+'s, '+(3+Math.random()*3)+'s';
+      p.style.animationDelay = (-Math.random()*18)+'s, '+(-Math.random()*4)+'s';
+      p.style.opacity = 0.5 + Math.random()*0.4;
+      container.appendChild(p);
+    }
+  </script>
+
+</body>
+</html>
