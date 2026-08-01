@@ -227,23 +227,17 @@
         return;
       }
 
-      const { data, error } = await sb.auth.signUp({ email, password });
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { data: { pseudo } }
+      });
       if(error){
         msg.textContent = error.message || error.error_description || JSON.stringify(error);
         return;
       }
       if(!data.user){
         msg.textContent = "Erreur inconnue lors de la création du compte.";
-        return;
-      }
-
-      // Crée le profil + le portefeuille de départ
-      const userId = data.user.id;
-      const { error: profileErr } = await sb.from('profiles').insert({ id: userId, pseudo });
-      const { error: walletErr } = await sb.from('gatcha_wallet').insert({ user_id: userId, coins: 1000 });
-
-      if(profileErr || walletErr){
-        msg.textContent = "Compte créé mais erreur profil : " + ((profileErr && profileErr.message) || (walletErr && walletErr.message) || "inconnue");
         return;
       }
 
