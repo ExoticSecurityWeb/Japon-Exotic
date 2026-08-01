@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gatcha — Exotic Security Japon</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@300;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --night:#161221;
+    --night-deep:#0c0a13;
+    --sakura:#f7b8c8;
+    --sakura-soft:#fbd8e1;
+    --gold:#d9b872;
+    --paper:#f3ece6;
+    --paper-dim:#c9c0d6;
+    --commun:#9aa0a6;
+    --rare:#6fb1f0;
+    --epique:#c98fe0;
+    --legendaire:#d9b872;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    background:
+      linear-gradient(180deg, rgba(12,10,19,0.55) 0%, rgba(12,10,19,0.75) 45%, rgba(12,10,19,0.95) 100%),
+      url('gatcha-bg.jpg') center 30% / cover no-repeat fixed;
+    min-height:100vh;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color:var(--paper);
+  }
+
+  nav{
+    max-width:820px; margin:0 auto;
+    padding:28px 24px 0;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  nav a{
+    color:var(--gold); text-decoration:none; font-size:0.8rem;
+    letter-spacing:0.15em; text-transform:uppercase;
+    border:1px solid rgba(217,184,114,0.4);
+    padding:8px 16px; border-radius:3px;
+  }
+
+  main{
+    max-width:640px; margin:0 auto;
+    padding:6vh 24px 8vh;
+    text-align:center;
+  }
+
+  .eyebrow{
+    font-weight:300; letter-spacing:0.35em; text-transform:uppercase;
+    font-size:0.72rem; color:var(--gold); margin:0 0 20px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:clamp(2.4rem, 8vw, 3.6rem);
+    margin:0 0 40px;
+  }
+
+  .box{
+    background:rgba(22,18,33,0.6);
+    border:1px solid rgba(217,184,114,0.3);
+    border-radius:8px;
+    padding:28px 24px;
+    margin-bottom:20px;
+  }
+
+  input{
+    width:100%;
+    padding:12px 14px;
+    margin-bottom:12px;
+    border-radius:6px;
+    border:1px solid #3a2f4d;
+    background:#1a1625;
+    color:#fff;
+    font-size:1rem;
+  }
+  button{
+    padding:12px 24px;
+    border-radius:6px;
+    border:none;
+    background:var(--sakura);
+    color:#1a1625;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:0.95rem;
+    width:100%;
+  }
+  button:disabled{ opacity:0.5; cursor:not-allowed; }
+  .link-btn{
+    background:none;
+    color:var(--paper-dim);
+    text-decoration:underline;
+    font-size:0.85rem;
+    margin-top:10px;
+    width:auto;
+  }
+
+  .wallet{
+    font-family:'Shippori Mincho', serif;
+    font-size:1.8rem;
+    color:var(--gold);
+  }
+  .wallet-label{
+    font-size:0.72rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+  }
+
+  .pull-btn{
+    background:linear-gradient(135deg, var(--sakura), var(--gold));
+    font-size:1.1rem;
+    padding:16px;
+  }
+
+  .card{
+    display:inline-block;
+    width:130px;
+    padding:20px 10px;
+    border-radius:10px;
+    margin:8px;
+    background:#1a1625;
+    border:2px solid var(--commun);
+  }
+  .card .emoji{ font-size:2.5rem; display:block; margin-bottom:8px; }
+  .card .name{ font-size:0.78rem; color:var(--paper); }
+  .card .rarity{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
+  .card.rare{ border-color:var(--rare); }
+  .card.epique{ border-color:var(--epique); box-shadow:0 0 16px rgba(201,143,224,0.3); }
+  .card.legendaire{ border-color:var(--legendaire); box-shadow:0 0 20px rgba(217,184,114,0.5); }
+
+  .inventory-grid{
+    display:flex; flex-wrap:wrap; justify-content:center;
+  }
+
+  .hidden{ display:none; }
+  .msg{ font-size:0.85rem; color:var(--sakura-soft); min-height:20px; margin-top:8px; }
+
+  footer{
+    text-align:center;
+    padding:0 24px 6vh;
+    font-size:0.75rem;
+    letter-spacing:0.1em;
+    color:var(--paper-dim);
+    opacity:0.7;
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <a href="/jeux">← Jeux</a>
+    <a href="/">Exotic Security</a>
+  </nav>
+
+  <main>
+    <p class="eyebrow">Jeu</p>
+    <h1>ガチャ — Gatcha</h1>
+
+    <!-- AUTH -->
+    <div id="authBox" class="box">
+      <div id="loginForm">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <button onclick="login()">Se connecter</button>
+        <button class="link-btn" onclick="toggleSignup()">Pas de compte ? Créer un compte</button>
+      </div>
+      <div id="signupForm" class="hidden">
+        <input type="text" id="pseudo" placeholder="Pseudo">
+        <input type="email" id="signupEmail" placeholder="Email">
+        <input type="password" id="signupPassword" placeholder="Mot de passe">
+        <button onclick="signup()">Créer mon compte</button>
+        <button class="link-btn" onclick="toggleSignup()">J'ai déjà un compte</button>
+      </div>
+      <div class="msg" id="authMsg"></div>
+    </div>
+
+    <!-- GAME -->
+    <div id="gameBox" class="hidden">
+      <div class="box">
+        <div class="wallet-label">Solde</div>
+        <div class="wallet" id="coinsDisplay">-- 🪙</div>
+        <button class="pull-btn" style="margin-top:16px;" onclick="pull()">Tirer (100 🪙)</button>
+        <div class="msg" id="pullMsg"></div>
+        <button class="link-btn" onclick="logout()">Se déconnecter</button>
+      </div>
+
+      <div id="pullResult"></div>
+
+      <div class="box">
+        <h3 style="font-family:'Shippori Mincho', serif; margin-top:0;">Ma collection</h3>
+        <div class="inventory-grid" id="inventoryGrid"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>© ExoticSecurity Japon</footer>
+
+  <script>
+    const supabaseUrl = 'https://rykrtutnyzhjtkqhlpnx.supabase.co';
+    const supabaseKey = 'sb_publishable_gdpo6xQmyiaO-sNSqM_PKw_qz8hQkHx';
+    const sb = supabase.createClient(supabaseUrl, supabaseKey);
+
+    let currentUser = null;
+
+    function toggleSignup(){
+      document.getElementById('loginForm').classList.toggle('hidden');
+      document.getElementById('signupForm').classList.toggle('hidden');
+      document.getElementById('authMsg').textContent = '';
+    }
+
+    async function signup(){
+      const pseudo = document.getElementById('pseudo').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const msg = document.getElementById('authMsg');
+
+      if(!pseudo || !email || !password){
+        msg.textContent = 'Remplis tous les champs.';
+        return;
+      }
+
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if(error){ msg.textContent = error.message; return; }
+
+      // Crée le profil + le portefeuille de départ
+      const userId = data.user.id;
+      await sb.from('profiles').insert({ id: userId, pseudo });
+      await sb.from('gatcha_wallet').insert({ user_id: userId, coins: 1000 });
+
+      msg.textContent = 'Compte créé ! Vérifie ton email si nécessaire, puis connecte-toi.';
+    }
+
+    async function login(){
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('authMsg');
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ msg.textContent = error.message; return; }
+
+      currentUser = data.user;
+      await enterGame();
+    }
+
+    async function logout(){
+      await sb.auth.signOut();
+      currentUser = null;
+      document.getElementById('gameBox').classList.add('hidden');
+      document.getElementById('authBox').classList.remove('hidden');
+    }
+
+    async function enterGame(){
+      document.getElementById('authBox').classList.add('hidden');
+      document.getElementById('gameBox').classList.remove('hidden');
+      await refreshWallet();
+      await refreshInventory();
+    }
+
+    async function refreshWallet(){
+      const { data } = await sb.from('gatcha_wallet').select('coins').eq('user_id', currentUser.id).single();
+      document.getElementById('coinsDisplay').textContent = (data ? data.coins : 0) + ' 🪙';
+    }
+
+    async function pull(){
+      const pullMsg = document.getElementById('pullMsg');
+      const { data: wallet } = await sb.from('gatcha_wallet').select('coins').eq('user_id', currentUser.id).single();
+
+      if(!wallet || wallet.coins < 100){
+        pullMsg.textContent = "Pas assez de pièces !";
+        return;
+      }
+
+      // Tire un objet aléatoire pondéré par rareté
+      const { data: items } = await sb.from('gatcha_items').select('*');
+      const weights = { commun: 60, rare: 28, epique: 10, legendaire: 2 };
+      const pool = [];
+      items.forEach(it => { for(let i=0; i<weights[it.rarity]; i++) pool.push(it); });
+      const won = pool[Math.floor(Math.random() * pool.length)];
+
+      // Débite les pièces + ajoute à l'inventaire
+      await sb.from('gatcha_wallet').update({ coins: wallet.coins - 100 }).eq('user_id', currentUser.id);
+      await sb.from('gatcha_inventory').insert({ user_id: currentUser.id, item_id: won.id });
+
+      document.getElementById('pullResult').innerHTML = `
+        <div class="card ${won.rarity}">
+          <span class="emoji">${won.emoji}</span>
+          <div class="name">${won.name}</div>
+          <div class="rarity" style="color:var(--${won.rarity})">${won.rarity}</div>
+        </div>
+      `;
+      pullMsg.textContent = '';
+
+      await refreshWallet();
+      await refreshInventory();
+    }
+
+    async function refreshInventory(){
+      const { data } = await sb
+        .from('gatcha_inventory')
+        .select('id, gatcha_items(name, rarity, emoji)')
+        .eq('user_id', currentUser.id)
+        .order('obtained_at', { ascending: false });
+
+      const grid = document.getElementById('inventoryGrid');
+      if(!data || data.length === 0){
+        grid.innerHTML = '<p class="msg">Aucun objet obtenu pour l\'instant.</p>';
+        return;
+      }
+
+      grid.innerHTML = data.map(entry => `
+        <div class="card ${entry.gatcha_items.rarity}">
+          <span class="emoji">${entry.gatcha_items.emoji}</span>
+          <div class="name">${entry.gatcha_items.name}</div>
+          <div class="rarity" style="color:var(--${entry.gatcha_items.rarity})">${entry.gatcha_items.rarity}</div>
+        </div>
+      `).join('');
+    }
+
+    // Vérifie si déjà connecté au chargement
+    (async () => {
+      const { data } = await sb.auth.getSession();
+      if(data.session){
+        currentUser = data.session.user;
+        await enterGame();
+      }
+    })();
+  </script>
+
+</body>
+</html>
