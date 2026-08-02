@@ -130,6 +130,7 @@
     border:2px solid var(--commun);
   }
   .card .emoji{ font-size:2.5rem; display:block; margin-bottom:8px; }
+  .card .card-img{ width:80px; height:80px; object-fit:cover; border-radius:8px; display:block; margin:0 auto 8px; }
   .card .name{ font-size:0.78rem; color:var(--paper); }
   .card .rarity{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
   .card.rare{ border-color:var(--rare); }
@@ -270,16 +271,38 @@
       await refreshInventory();
     }
 
+    const COIN_CAP = 100;
+    const COINS_PER_MINUTE = 100 / 60; // regen complet en 1h
+
+    function computeRegeneratedCoins(storedCoins, lastRegenISO){
+      const last = new Date(lastRegenISO).getTime();
+      const now = Date.now();
+      const minutesElapsed = Math.max(0, (now - last) / 60000);
+      const regenerated = Math.floor(minutesElapsed * COINS_PER_MINUTE);
+      return Math.min(COIN_CAP, storedCoins + regenerated);
+    }
+
     async function refreshWallet(){
-      const { data } = await sb.from('gatcha_wallet').select('coins').eq('user_id', currentUser.id).single();
-      document.getElementById('coinsDisplay').textContent = (data ? data.coins : 0) + ' 🪙';
+      const { data } = await sb.from('gatcha_wallet').select('coins, last_regen').eq('user_id', currentUser.id).single();
+      if(!data){ document.getElementById('coinsDisplay').textContent = '0 🪙'; return; }
+
+      const current = computeRegeneratedCoins(data.coins, data.last_regen);
+      document.getElementById('coinsDisplay').textContent = current + ' 🪙';
+
+      // Synchronise en base si des pieces ont ete gagnees depuis la derniere visite
+      if(current !== data.coins){
+        await sb.from('gatcha_wallet').update({ coins: current, last_regen: new Date().toISOString() }).eq('user_id', currentUser.id);
+      }
     }
 
     async function pull(){
       const pullMsg = document.getElementById('pullMsg');
-      const { data: wallet } = await sb.from('gatcha_wallet').select('coins').eq('user_id', currentUser.id).single();
+      const { data: wallet } = await sb.from('gatcha_wallet').select('coins, last_regen').eq('user_id', currentUser.id).single();
+      if(!wallet){ pullMsg.textContent = "Erreur de portefeuille."; return; }
 
-      if(!wallet || wallet.coins < 100){
+      const currentCoins = computeRegeneratedCoins(wallet.coins, wallet.last_regen);
+
+      if(currentCoins < 100){
         pullMsg.textContent = "Pas assez de pièces !";
         return;
       }
@@ -291,13 +314,17 @@
       items.forEach(it => { for(let i=0; i<weights[it.rarity]; i++) pool.push(it); });
       const won = pool[Math.floor(Math.random() * pool.length)];
 
-      // Débite les pièces + ajoute à l'inventaire
-      await sb.from('gatcha_wallet').update({ coins: wallet.coins - 100 }).eq('user_id', currentUser.id);
+      // Débite les pièces + met à jour le point de départ de la regen + ajoute à l'inventaire
+      await sb.from('gatcha_wallet').update({ coins: currentCoins - 100, last_regen: new Date().toISOString() }).eq('user_id', currentUser.id);
       await sb.from('gatcha_inventory').insert({ user_id: currentUser.id, item_id: won.id });
+
+      const visual = won.image_url
+        ? `<img class="card-img" src="${won.image_url}" alt="${won.name}">`
+        : `<span class="emoji">${won.emoji}</span>`;
 
       document.getElementById('pullResult').innerHTML = `
         <div class="card ${won.rarity}">
-          <span class="emoji">${won.emoji}</span>
+          ${visual}
           <div class="name">${won.name}</div>
           <div class="rarity" style="color:var(--${won.rarity})">${won.rarity}</div>
         </div>
@@ -321,13 +348,19 @@
         return;
       }
 
-      grid.innerHTML = data.map(entry => `
-        <div class="card ${entry.gatcha_items.rarity}">
-          <span class="emoji">${entry.gatcha_items.emoji}</span>
-          <div class="name">${entry.gatcha_items.name}</div>
-          <div class="rarity" style="color:var(--${entry.gatcha_items.rarity})">${entry.gatcha_items.rarity}</div>
+      grid.innerHTML = data.map(entry => {
+        const it = entry.gatcha_items;
+        const visual = it.image_url
+          ? `<img class="card-img" src="${it.image_url}" alt="${it.name}">`
+          : `<span class="emoji">${it.emoji}</span>`;
+        return `
+        <div class="card ${it.rarity}">
+          ${visual}
+          <div class="name">${it.name}</div>
+          <div class="rarity" style="color:var(--${it.rarity})">${it.rarity}</div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // Vérifie si déjà connecté au chargement
