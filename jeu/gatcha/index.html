@@ -314,13 +314,37 @@
       items.forEach(it => { for(let i=0; i<weights[it.rarity]; i++) pool.push(it); });
       const won = pool[Math.floor(Math.random() * pool.length)];
 
-      // Débite les pièces + met à jour le point de départ de la regen + ajoute à l'inventaire
-      await sb.from('gatcha_wallet').update({ coins: currentCoins - 100, last_regen: new Date().toISOString() }).eq('user_id', currentUser.id);
-      await sb.from('gatcha_inventory').insert({ user_id: currentUser.id, item_id: won.id });
+      // Vérifie si l'objet est déjà possédé (doublon)
+      const { data: existing } = await sb
+        .from('gatcha_inventory')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('item_id', won.id)
+        .limit(1);
+
+      const isDuplicate = existing && existing.length > 0;
+      const dupeBonus = { commun: 20, rare: 40, epique: 70, legendaire: 150 };
+
+      let newCoins = currentCoins - 100;
+      let bonusEarned = 0;
+
+      if(isDuplicate){
+        bonusEarned = dupeBonus[won.rarity];
+        newCoins += bonusEarned;
+      } else {
+        await sb.from('gatcha_inventory').insert({ user_id: currentUser.id, item_id: won.id });
+      }
+
+      // Débite les pièces (+ bonus doublon si applicable) et remet le compteur de regen à zéro
+      await sb.from('gatcha_wallet').update({ coins: newCoins, last_regen: new Date().toISOString() }).eq('user_id', currentUser.id);
 
       const visual = won.image_url
         ? `<img class="card-img" src="${won.image_url}" alt="${won.name}">`
         : `<span class="emoji">${won.emoji}</span>`;
+
+      const dupeNote = isDuplicate
+        ? `<div class="msg" style="color:var(--gold); margin-top:6px;">Doublon converti en +${bonusEarned} 🪙</div>`
+        : '';
 
       document.getElementById('pullResult').innerHTML = `
         <div class="card ${won.rarity}">
@@ -328,6 +352,7 @@
           <div class="name">${won.name}</div>
           <div class="rarity" style="color:var(--${won.rarity})">${won.rarity}</div>
         </div>
+        ${dupeNote}
       `;
       pullMsg.textContent = '';
 
