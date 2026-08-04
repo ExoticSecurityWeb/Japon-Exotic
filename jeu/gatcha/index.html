@@ -188,6 +188,10 @@
       <div class="box">
         <div class="wallet-label">Solde</div>
         <div class="wallet" id="coinsDisplay">-- 🪙</div>
+        <div id="regenBarWrap" style="background:#1a1625; border-radius:6px; height:8px; margin-top:12px; overflow:hidden;">
+          <div id="regenBar" style="background:var(--gold); height:100%; width:0%; transition:width 0.5s;"></div>
+        </div>
+        <div class="msg" id="regenTimer" style="margin-top:6px;">--</div>
         <button class="pull-btn" style="margin-top:16px;" onclick="pull()">Tirer (100 🪙)</button>
         <div class="msg" id="pullMsg"></div>
         <button class="link-btn" onclick="logout()">Se déconnecter</button>
@@ -273,34 +277,49 @@
 
     const COIN_CAP = 100;
     const COINS_PER_MINUTE = 100 / 60; // regen complet en 1h
+    let walletBase = { coins: 0, last_regen: new Date().toISOString() };
+    let regenInterval = null;
 
     function computeRegeneratedCoins(storedCoins, lastRegenISO){
       const last = new Date(lastRegenISO).getTime();
       const now = Date.now();
       const minutesElapsed = Math.max(0, (now - last) / 60000);
-      const regenerated = Math.floor(minutesElapsed * COINS_PER_MINUTE);
+      const regenerated = minutesElapsed * COINS_PER_MINUTE;
       return Math.min(COIN_CAP, storedCoins + regenerated);
+    }
+
+    function tickDisplay(){
+      const current = computeRegeneratedCoins(walletBase.coins, walletBase.last_regen);
+      const rounded = Math.floor(current);
+      document.getElementById('coinsDisplay').textContent = rounded + ' 🪙';
+      document.getElementById('regenBar').style.width = current + '%';
+
+      const timerEl = document.getElementById('regenTimer');
+      if(current >= COIN_CAP){
+        timerEl.textContent = 'Plein';
+      } else {
+        const missing = COIN_CAP - current;
+        const secondsLeft = Math.ceil((missing / COINS_PER_MINUTE) * 60);
+        const mm = Math.floor(secondsLeft / 60);
+        const ss = secondsLeft % 60;
+        timerEl.textContent = `Prochaine pièce dans ${mm}m ${String(ss).padStart(2,'0')}s`;
+      }
     }
 
     async function refreshWallet(){
       const { data } = await sb.from('gatcha_wallet').select('coins, last_regen').eq('user_id', currentUser.id).single();
-      if(!data){ document.getElementById('coinsDisplay').textContent = '0 🪙'; return; }
+      if(!data) return;
 
-      const current = computeRegeneratedCoins(data.coins, data.last_regen);
-      document.getElementById('coinsDisplay').textContent = current + ' 🪙';
+      walletBase = { coins: data.coins, last_regen: data.last_regen };
+      tickDisplay();
 
-      // Synchronise en base si des pieces ont ete gagnees depuis la derniere visite
-      if(current !== data.coins){
-        await sb.from('gatcha_wallet').update({ coins: current, last_regen: new Date().toISOString() }).eq('user_id', currentUser.id);
-      }
+      if(regenInterval) clearInterval(regenInterval);
+      regenInterval = setInterval(tickDisplay, 1000);
     }
 
     async function pull(){
       const pullMsg = document.getElementById('pullMsg');
-      const { data: wallet } = await sb.from('gatcha_wallet').select('coins, last_regen').eq('user_id', currentUser.id).single();
-      if(!wallet){ pullMsg.textContent = "Erreur de portefeuille."; return; }
-
-      const currentCoins = computeRegeneratedCoins(wallet.coins, wallet.last_regen);
+      const currentCoins = computeRegeneratedCoins(walletBase.coins, walletBase.last_regen);
 
       if(currentCoins < 100){
         pullMsg.textContent = "Pas assez de pièces !";
@@ -337,6 +356,7 @@
 
       // Débite les pièces (+ bonus doublon si applicable) et remet le compteur de regen à zéro
       await sb.from('gatcha_wallet').update({ coins: newCoins, last_regen: new Date().toISOString() }).eq('user_id', currentUser.id);
+      walletBase = { coins: newCoins, last_regen: new Date().toISOString() };
 
       const visual = won.image_url
         ? `<img class="card-img" src="${won.image_url}" alt="${won.name}">`
