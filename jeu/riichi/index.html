@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riichi — Exotic Security Japon</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@300;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --night:#161221;
+    --night-deep:#0c0a13;
+    --sakura:#f7b8c8;
+    --gold:#d9b872;
+    --paper:#f3ece6;
+    --paper-dim:#c9c0d6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    background:radial-gradient(ellipse at 50% -10%, #1a2a24 0%, var(--night) 45%, var(--night-deep) 100%);
+    min-height:100vh;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color:var(--paper);
+  }
+
+  nav{
+    max-width:820px; margin:0 auto;
+    padding:28px 24px 0;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  nav a{
+    color:var(--gold); text-decoration:none; font-size:0.8rem;
+    letter-spacing:0.15em; text-transform:uppercase;
+    border:1px solid rgba(217,184,114,0.4);
+    padding:8px 16px; border-radius:3px;
+  }
+
+  main{
+    max-width:640px; margin:0 auto;
+    padding:6vh 24px 8vh;
+    text-align:center;
+  }
+
+  .eyebrow{
+    font-weight:300; letter-spacing:0.35em; text-transform:uppercase;
+    font-size:0.72rem; color:var(--gold); margin:0 0 20px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:clamp(2.4rem, 8vw, 3.6rem);
+    margin:0 0 40px;
+  }
+
+  .box{
+    background:rgba(22,18,33,0.6);
+    border:1px solid rgba(217,184,114,0.3);
+    border-radius:8px;
+    padding:28px 24px;
+    margin-bottom:20px;
+    text-align:left;
+  }
+
+  input{
+    width:100%;
+    padding:12px 14px;
+    margin-bottom:12px;
+    border-radius:6px;
+    border:1px solid #3a2f4d;
+    background:#1a1625;
+    color:#fff;
+    font-size:1rem;
+  }
+  button{
+    padding:12px 24px;
+    border-radius:6px;
+    border:none;
+    background:var(--sakura);
+    color:#1a1625;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:0.95rem;
+    width:100%;
+  }
+  .link-btn{
+    background:none;
+    color:var(--paper-dim);
+    text-decoration:underline;
+    font-size:0.85rem;
+    margin-top:10px;
+    width:auto;
+  }
+  .msg{ font-size:0.85rem; color:var(--sakura); min-height:20px; margin-top:8px; }
+  .hidden{ display:none; }
+
+  .rules-toggle{
+    background:none;
+    border:1px solid rgba(217,184,114,0.4);
+    color:var(--gold);
+    width:100%;
+    text-align:center;
+    padding:14px;
+    font-size:0.9rem;
+    letter-spacing:0.05em;
+  }
+
+  .rules-content h3{
+    font-family:'Shippori Mincho', serif;
+    color:var(--sakura);
+    font-size:1rem;
+    margin:20px 0 8px;
+  }
+  .rules-content h3:first-child{ margin-top:0; }
+  .rules-content p{
+    font-size:0.88rem;
+    line-height:1.65;
+    color:var(--paper);
+    margin:0 0 4px;
+  }
+  .rules-content .tile-ex{
+    display:inline-block;
+    background:#fff;
+    color:#1a1625;
+    padding:2px 8px;
+    border-radius:3px;
+    font-size:0.8rem;
+    margin:2px;
+  }
+
+  footer{
+    text-align:center;
+    padding:0 24px 6vh;
+    font-size:0.75rem;
+    letter-spacing:0.1em;
+    color:var(--paper-dim);
+    opacity:0.7;
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <a href="/jeux">← Jeux</a>
+    <a href="/">Exotic Security</a>
+  </nav>
+
+  <main>
+    <p class="eyebrow">Jeu</p>
+    <p style="font-family:'Shippori Mincho', serif; color:var(--sakura); font-size:1.2rem; margin:0 0 4px;">麻雀</p>
+    <h1>Riichi Mahjong</h1>
+
+    <!-- AUTH (compte partage avec le gatcha) -->
+    <div id="authBox" class="box">
+      <div id="loginForm">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <button onclick="login()">Se connecter</button>
+        <button class="link-btn" onclick="toggleSignup()">Pas de compte ? Créer un compte</button>
+      </div>
+      <div id="signupForm" class="hidden">
+        <input type="text" id="pseudo" placeholder="Pseudo">
+        <input type="email" id="signupEmail" placeholder="Email">
+        <input type="password" id="signupPassword" placeholder="Mot de passe">
+        <button onclick="signup()">Créer mon compte</button>
+        <button class="link-btn" onclick="toggleSignup()">J'ai déjà un compte</button>
+      </div>
+      <div class="msg" id="authMsg"></div>
+      <p style="font-size:0.75rem; color:var(--paper-dim); margin-top:14px; text-align:center;">
+        Même compte que le Gatcha — pas besoin de te réinscrire si tu l'as déjà.
+      </p>
+    </div>
+
+    <!-- GAME (a venir) -->
+    <div id="gameBox" class="hidden box" style="text-align:center;">
+      <p style="color:var(--paper-dim);">Connecté(e) ! La table de jeu arrive bientôt ici.</p>
+      <button class="link-btn" onclick="logout()">Se déconnecter</button>
+    </div>
+
+    <!-- REGLES -->
+    <button class="rules-toggle" onclick="toggleRules()" id="rulesToggle">📖 Règles du jeu</button>
+    <div class="box rules-content hidden" id="rulesContent">
+
+      <h3>Le principe</h3>
+      <p>4 joueurs, chacun avec une main de 13 tuiles. Le but : compléter une main de 14 tuiles formant 4 groupes (brelans ou suites de 3) + 1 paire.</p>
+
+      <h3>Les tuiles</h3>
+      <p>
+        <span class="tile-ex">萬 Man</span>
+        <span class="tile-ex">筒 Pin</span>
+        <span class="tile-ex">索 Sou</span>
+        — trois familles numérotées de 1 à 9, en 4 exemplaires chacune.
+      </p>
+      <p>Plus les tuiles d'honneur : 4 vents (Est / Sud / Ouest / Nord) et 3 dragons (Blanc / Vert / Rouge).</p>
+
+      <h3>Le tour de jeu</h3>
+      <p>Tu pioches une tuile, puis tu en défausses une. La partie tourne ainsi jusqu'à ce que quelqu'un complète sa main.</p>
+
+      <h3>Les appels</h3>
+      <p><strong>Pon</strong> : voler la défausse de n'importe qui pour compléter un brelan.<br>
+      <strong>Chi</strong> : voler la défausse de ton voisin de gauche pour compléter une suite.<br>
+      <strong>Kan</strong> : faire un carré de 4 tuiles identiques.</p>
+
+      <h3>Le Riichi</h3>
+      <p>Quand ta main n'est plus qu'à une tuile de la victoire (et que tu n'as fait aucun appel), tu peux déclarer "Riichi" : ta main est verrouillée, mais si tu gagnes ensuite tu obtiens un bonus de points.</p>
+
+      <h3>Gagner</h3>
+      <p>Il faut au moins un "yaku" (combinaison spéciale reconnue) pour valider ta victoire — le Riichi en est un, il en existe plusieurs dizaines d'autres.</p>
+
+    </div>
+  </main>
+
+  <footer>© ExoticSecurity Japon</footer>
+
+  <script>
+    const supabaseUrl = 'https://rykrtutnyzhjtkqhlpnx.supabase.co';
+    const supabaseKey = 'sb_publishable_gdpo6xQmyiaO-sNSqM_PKw_qz8hQkHx';
+    const sb = supabase.createClient(supabaseUrl, supabaseKey);
+
+    let currentUser = null;
+
+    function toggleSignup(){
+      document.getElementById('loginForm').classList.toggle('hidden');
+      document.getElementById('signupForm').classList.toggle('hidden');
+      document.getElementById('authMsg').textContent = '';
+    }
+
+    function toggleRules(){
+      const content = document.getElementById('rulesContent');
+      content.classList.toggle('hidden');
+      document.getElementById('rulesToggle').textContent = content.classList.contains('hidden')
+        ? '📖 Règles du jeu'
+        : '📖 Masquer les règles';
+    }
+
+    async function signup(){
+      const pseudo = document.getElementById('pseudo').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const msg = document.getElementById('authMsg');
+
+      if(!pseudo || !email || !password){
+        msg.textContent = 'Remplis tous les champs.';
+        return;
+      }
+
+      const { data, error } = await sb.auth.signUp({
+        email, password, options: { data: { pseudo } }
+      });
+      if(error){ msg.textContent = error.message || JSON.stringify(error); return; }
+
+      msg.textContent = 'Compte créé ! Vérifie ton email si nécessaire, puis connecte-toi.';
+    }
+
+    async function login(){
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('authMsg');
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ msg.textContent = error.message; return; }
+
+      currentUser = data.user;
+      enterGame();
+    }
+
+    async function logout(){
+      await sb.auth.signOut();
+      currentUser = null;
+      document.getElementById('gameBox').classList.add('hidden');
+      document.getElementById('authBox').classList.remove('hidden');
+    }
+
+    function enterGame(){
+      document.getElementById('authBox').classList.add('hidden');
+      document.getElementById('gameBox').classList.remove('hidden');
+    }
+
+    (async () => {
+      const { data } = await sb.auth.getSession();
+      if(data.session){
+        currentUser = data.session.user;
+        enterGame();
+      }
+    })();
+  </script>
+
+</body>
+</html>
